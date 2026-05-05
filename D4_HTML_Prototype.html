@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supreme Mobiles — Dashboard Prototype</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Roboto, sans-serif; background: #f4f6f9; color: #2d2d2d; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; top: 0; left: 0; width: 230px; height: 100vh;
+      background: #1e1e2d; color: #ccc; display: flex; flex-direction: column;
+      padding: 0; z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      background: #16162a;
+      border-bottom: 1px solid #2a2a3d;
+    }
+    .sidebar-logo .brand { font-size: 20px; font-weight: 700; color: #4ade80; letter-spacing: 0.5px; }
+    .sidebar-logo .sub { font-size: 11px; color: #888; margin-top: 2px; }
+    .sidebar nav { flex: 1; padding: 16px 0; }
+    .nav-section { font-size: 10px; text-transform: uppercase; color: #555; padding: 12px 20px 6px; letter-spacing: 1px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; font-size: 14px; color: #aaa;
+      cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: #2a2a3d; color: #fff; border-left-color: #4ade80;
+    }
+    .nav-item .icon { width: 18px; text-align: center; font-size: 16px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #2a2a3d; font-size: 12px; color: #666; }
+
+    /* Main content */
+    .main { margin-left: 230px; min-height: 100vh; }
+
+    /* Topbar */
+    .topbar {
+      background: #fff; border-bottom: 1px solid #e8eaf0;
+      padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 99;
+    }
+    .topbar .page-title { font-size: 18px; font-weight: 600; color: #1e1e2d; }
+    .topbar .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar .date-badge {
+      font-size: 13px; color: #888;
+      background: #f4f6f9; padding: 6px 12px; border-radius: 6px;
+    }
+    .topbar .user-badge {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 500;
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #4ade80; color: #fff; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; font-size: 13px;
+    }
+
+    /* Page body */
+    .page-body { padding: 28px; }
+
+    /* KPI Cards */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
+    .kpi-card {
+      background: #fff; border-radius: 12px; padding: 22px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-left: 4px solid transparent;
+    }
+    .kpi-card.green { border-left-color: #4ade80; }
+    .kpi-card.blue { border-left-color: #60a5fa; }
+    .kpi-card.orange { border-left-color: #fb923c; }
+    .kpi-card.red { border-left-color: #f87171; }
+    .kpi-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value { font-size: 28px; font-weight: 700; color: #1e1e2d; margin: 6px 0 4px; }
+    .kpi-sub { font-size: 12px; color: #aaa; }
+    .kpi-trend { font-size: 12px; margin-top: 6px; }
+    .kpi-trend.up { color: #22c55e; }
+    .kpi-trend.down { color: #ef4444; }
+
+    /* Charts row */
+    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 28px; }
+    .chart-card {
+      background: #fff; border-radius: 12px; padding: 22px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .chart-title { font-size: 14px; font-weight: 600; color: #1e1e2d; margin-bottom: 18px; }
+
+    /* Simulated bar chart */
+    .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 140px; }
+    .bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+    .bar {
+      width: 100%; border-radius: 4px 4px 0 0; background: #4ade80;
+      transition: opacity 0.2s;
+    }
+    .bar:hover { opacity: 0.8; }
+    .bar-label { font-size: 10px; color: #888; }
+    .bar-amount { font-size: 9px; color: #555; }
+
+    /* Donut chart simulation */
+    .donut-container { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .donut {
+      width: 120px; height: 120px; border-radius: 50%;
+      background: conic-gradient(#4ade80 0% 45%, #60a5fa 45% 75%, #fb923c 75% 90%, #f87171 90% 100%);
+      display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .donut-hole {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #fff; position: absolute;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: #888; text-align: center; line-height: 1.3;
+    }
+    .legend { width: 100%; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #555; margin-bottom: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Tables */
+    .table-card {
+      background: #fff; border-radius: 12px; padding: 22px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 28px;
+    }
+    .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .table-title { font-size: 14px; font-weight: 600; color: #1e1e2d; }
+    .btn {
+      padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-primary { background: #4ade80; color: #1e1e2d; }
+    .btn-primary:hover { background: #22c55e; }
+    .btn-outline { background: transparent; color: #4ade80; border: 1px solid #4ade80; }
+    .btn-outline:hover { background: #f0fdf4; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left; padding: 10px 12px;
+      font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    td { padding: 12px 12px; font-size: 13px; border-bottom: 1px solid #f8f8f8; color: #3d3d3d; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f9fafb; }
+
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-green { background: #f0fdf4; color: #16a34a; }
+    .badge-yellow { background: #fefce8; color: #ca8a04; }
+    .badge-red { background: #fef2f2; color: #dc2626; }
+    .badge-blue { background: #eff6ff; color: #2563eb; }
+
+    /* Quick Sale Form */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+    input, select, textarea {
+      padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px;
+      font-size: 14px; color: #1e1e2d; outline: none; transition: border 0.2s;
+      background: #fdfdfd;
+    }
+    input:focus, select:focus { border-color: #4ade80; background: #fff; }
+    .form-actions { display: flex; gap: 10px; margin-top: 8px; }
+
+    /* Active campaign banner */
+    .campaign-banner {
+      background: linear-gradient(135deg, #1e1e2d 0%, #2d2d50 100%);
+      border-radius: 12px; padding: 20px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; color: #fff;
+    }
+    .campaign-badge {
+      background: #4ade80; color: #1e1e2d;
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; text-transform: uppercase; margin-bottom: 6px;
+      display: inline-block;
+    }
+    .campaign-name { font-size: 20px; font-weight: 700; }
+    .campaign-sub { font-size: 13px; color: #aaa; margin-top: 4px; }
+    .campaign-stat { text-align: right; }
+    .campaign-stat .cval { font-size: 28px; font-weight: 700; color: #4ade80; }
+    .campaign-stat .clabel { font-size: 12px; color: #aaa; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">supreme mobiles</div>
+    <div class="sub">A Unit of Supreme Paradise</div>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active"><span class="icon">🏠</span> Overview</div>
+    <div class="nav-section">Operations</div>
+    <div class="nav-item"><span class="icon">🛒</span> Sales</div>
+    <div class="nav-item"><span class="icon">📦</span> Inventory</div>
+    <div class="nav-item"><span class="icon">👥</span> Customers</div>
+    <div class="nav-item"><span class="icon">📣</span> Promotions</div>
+    <div class="nav-section">Finance</div>
+    <div class="nav-item"><span class="icon">📊</span> Reports</div>
+    <div class="nav-section">System</div>
+    <div class="nav-item"><span class="icon">⚙️</span> Settings</div>
+  </nav>
+  <div class="sidebar-footer">Supreme Mobiles &copy; 2026</div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="page-title">Dashboard Overview</div>
+    <div class="topbar-right">
+      <div class="date-badge">Monday, 5 May 2026</div>
+      <div class="user-badge">
+        <div class="avatar">SM</div>
+        <span>Store Manager</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="page-body">
+
+    <!-- Active Campaign Banner -->
+    <div class="campaign-banner">
+      <div>
+        <div class="campaign-badge">Active Campaign</div>
+        <div class="campaign-name">Cost to Cost Sale</div>
+        <div class="campaign-sub">May 3 – May 5, 2026 &nbsp;|&nbsp; All Brands</div>
+      </div>
+      <div class="campaign-stat">
+        <div class="cval">₹2,34,500</div>
+        <div class="clabel">Revenue this campaign</div>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">Today's Revenue</div>
+        <div class="kpi-value">₹48,500</div>
+        <div class="kpi-sub">12 units sold</div>
+        <div class="kpi-trend up">▲ 18% vs yesterday</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">Monthly Revenue</div>
+        <div class="kpi-value">₹6,72,000</div>
+        <div class="kpi-sub">218 units this month</div>
+        <div class="kpi-trend up">▲ 11% vs last month</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-label">Active EMI Customers</div>
+        <div class="kpi-value">34</div>
+        <div class="kpi-sub">₹1,12,000 outstanding</div>
+        <div class="kpi-trend down">3 due this week</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">Low Stock Alerts</div>
+        <div class="kpi-value">5</div>
+        <div class="kpi-sub">Products below threshold</div>
+        <div class="kpi-trend down">Reorder needed</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <!-- Bar Chart: Revenue by Brand -->
+      <div class="chart-card">
+        <div class="chart-title">Revenue by Brand — This Month</div>
+        <div class="bar-chart">
+          <div class="bar-wrap">
+            <div class="bar-amount">₹1.8L</div>
+            <div class="bar" style="height:120px; background:#4ade80;"></div>
+            <div class="bar-label">Samsung</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-amount">₹1.4L</div>
+            <div class="bar" style="height:94px; background:#60a5fa;"></div>
+            <div class="bar-label">TECNO</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-amount">₹1.1L</div>
+            <div class="bar" style="height:74px; background:#fb923c;"></div>
+            <div class="bar-label">Realme</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-amount">₹0.9L</div>
+            <div class="bar" style="height:60px; background:#a78bfa;"></div>
+            <div class="bar-label">SONY</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-amount">₹0.7L</div>
+            <div class="bar" style="height:47px; background:#f472b6;"></div>
+            <div class="bar-label">LG</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-amount">₹0.8L</div>
+            <div class="bar" style="height:53px; background:#34d399;"></div>
+            <div class="bar-label">Others</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Donut Chart: Payment Mode -->
+      <div class="chart-card">
+        <div class="chart-title">Payment Mode Split</div>
+        <div class="donut-container">
+          <div class="donut">
+            <div class="donut-hole">Payment<br>Mode</div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#4ade80;"></div> Cash — 45%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#60a5fa;"></div> UPI — 30%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fb923c;"></div> Card — 15%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f87171;"></div> EMI — 10%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Sales Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Recent Sales</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm">Export</button>
+          <button class="btn btn-primary btn-sm">+ New Sale</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Sale ID</th>
+            <th>Customer</th>
+            <th>Product</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>#SM-1042</td>
+            <td>Rajesh Kumar</td>
+            <td>Samsung Galaxy A35 5G</td>
+            <td>₹24,999</td>
+            <td>UPI</td>
+            <td>5:45 PM</td>
+            <td><span class="badge badge-green">Completed</span></td>
+          </tr>
+          <tr>
+            <td>#SM-1041</td>
+            <td>Priya Devi</td>
+            <td>TECNO Spark 20 Pro</td>
+            <td>₹12,499</td>
+            <td>Cash</td>
+            <td>4:20 PM</td>
+            <td><span class="badge badge-green">Completed</span></td>
+          </tr>
+          <tr>
+            <td>#SM-1040</td>
+            <td>Murugan S.</td>
+            <td>Realme Narzo 70x</td>
+            <td>₹10,999</td>
+            <td>EMI</td>
+            <td>2:55 PM</td>
+            <td><span class="badge badge-blue">EMI Active</span></td>
+          </tr>
+          <tr>
+            <td>#SM-1039</td>
+            <td>Kavitha R.</td>
+            <td>Sony WH-1000XM5</td>
+            <td>₹29,990</td>
+            <td>Card</td>
+            <td>1:10 PM</td>
+            <td><span class="badge badge-green">Completed</span></td>
+          </tr>
+          <tr>
+            <td>#SM-1038</td>
+            <td>Anbu Selvan</td>
+            <td>LG XBOOM Go PL7</td>
+            <td>₹6,999</td>
+            <td>Cash</td>
+            <td>11:30 AM</td>
+            <td><span class="badge badge-yellow">Pending Receipt</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Inventory Alerts -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Low Stock Alerts</div>
+        <button class="btn btn-outline btn-sm">View All Inventory</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Stock Left</th>
+            <th>Threshold</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Samsung</td>
+            <td>Galaxy M35 5G (Blue)</td>
+            <td>2</td>
+            <td>5</td>
+            <td><span class="badge badge-yellow">Low Stock</span></td>
+            <td><button class="btn btn-outline btn-sm">Reorder</button></td>
+          </tr>
+          <tr>
+            <td>TECNO</td>
+            <td>Spark Go 2025</td>
+            <td>0</td>
+            <td>3</td>
+            <td><span class="badge badge-red">Out of Stock</span></td>
+            <td><button class="btn btn-outline btn-sm">Reorder</button></td>
+          </tr>
+          <tr>
+            <td>Realme</td>
+            <td>C65 (Purple 128GB)</td>
+            <td>1</td>
+            <td>4</td>
+            <td><span class="badge badge-yellow">Low Stock</span></td>
+            <td><button class="btn btn-outline btn-sm">Reorder</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Quick Sale Form -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Quick New Sale</div>
+      </div>
+      <form onsubmit="return false;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Customer Name</label>
+            <input type="text" placeholder="e.g. Rajesh Kumar" />
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" placeholder="e.g. 9876543210" />
+          </div>
+          <div class="form-group">
+            <label>Product</label>
+            <select>
+              <option value="">— Select Product —</option>
+              <option>Samsung Galaxy A35 5G — ₹24,999</option>
+              <option>TECNO Spark 20 Pro — ₹12,499</option>
+              <option>Realme Narzo 70x — ₹10,999</option>
+              <option>Sony WH-1000XM5 — ₹29,990</option>
+              <option>LG XBOOM Go PL7 — ₹6,999</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Payment Mode</label>
+            <select>
+              <option>Cash</option>
+              <option>UPI</option>
+              <option>Card</option>
+              <option>EMI</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Selling Price (₹)</label>
+            <input type="number" placeholder="e.g. 24999" />
+          </div>
+          <div class="form-group">
+            <label>Discount (₹)</label>
+            <input type="number" placeholder="e.g. 500" />
+          </div>
+          <div class="form-group full">
+            <label>Notes</label>
+            <input type="text" placeholder="Optional notes about this sale" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save Sale &amp; Print Receipt</button>
+          <button type="reset" class="btn btn-outline">Clear</button>
+        </div>
+      </form>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main -->
+
+</body>
+</html>
